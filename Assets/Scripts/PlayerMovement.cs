@@ -13,6 +13,10 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 Inputvalue;
     public Animator anim;
 
+    private bool isWalking;
+    private bool isRunning;
+
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -30,11 +34,39 @@ public class PlayerMovement : MonoBehaviour
         if (Inputvalue != Vector2.zero)
         {
             anim.SetBool("walk", true);
+            isWalking = true;
+
+            if (anim.GetBool("walk") && isWalking)
+            {
+                if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    isRunning = true;
+                    anim.SetBool("run", true);
+                    Movespeed = 13;
+                }
+                else
+                {
+                    isRunning = false;
+                    anim.SetBool("run", false);
+                    Movespeed = 5;
+                }
+
+            }
+
+            
         }
         else
         {
             anim.SetBool("walk", false);
+            anim.SetBool("run", false);
+            isWalking = false;
         }
+
+        lookAt();
+
+
+
+
     }
 
     private void JumpPlayer(InputAction.CallbackContext context)
@@ -42,5 +74,16 @@ public class PlayerMovement : MonoBehaviour
         rb.AddForce(Vector3.up * Jumpspeed, ForceMode.Impulse);
         anim.SetTrigger("jump");
     }
+    private void lookAt()
+    {
+        Vector3 direction = rb.velocity;
+        var newRotation = Quaternion.LookRotation(direction, Vector3.up);
+        newRotation.x = 0;
+        newRotation.z = 0;
 
+        if (playerinput.Player.Movement.ReadValue<Vector2>().sqrMagnitude > 0.1f && direction.sqrMagnitude > 0.1f)
+            this.rb.rotation = Quaternion.Slerp(rb.rotation, newRotation.normalized, 0.4f);
+        else
+            rb.angularVelocity = Vector3.zero;
+    }
 }
